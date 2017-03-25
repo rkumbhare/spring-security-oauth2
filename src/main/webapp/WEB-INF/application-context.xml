@@ -11,6 +11,7 @@
 	
 	<context:component-scan base-package="com.rkumbhare.myapp.controller"></context:component-scan>
 	<context:component-scan base-package="com.rkumbhare.myapp.security"></context:component-scan>
+	<context:component-scan base-package="com.rkumbhare.myapp.exception"></context:component-scan>
 	
 	<bean id="jackson2HttpMessageConverter" class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
 	</bean>

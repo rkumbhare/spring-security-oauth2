@@ -10,8 +10,7 @@
 
 
 	<!-- Oauth2 token configuration -->
-	<security:http use-expressions="false"  pattern="/oauth/token" create-session="stateless"
-		authentication-manager-ref="authenticationManager">
+	<security:http use-expressions="false" pattern="/oauth/token" create-session="stateless">
 		<security:anonymous enabled="false" />
 		<security:intercept-url pattern="/oauth/token" access="IS_AUTHENTICATED_FULLY" />
 		<security:http-basic entry-point-ref="clientAuthenticationEntryPoint" />
@@ -20,39 +19,14 @@
 		<security:access-denied-handler ref="accessDeniedHandler" />
 	</security:http>
 
-	<!-- The OAuth2 protected resources are separated out into their own block so we can deal with authorization 
-		and error handling separately. This isn't mandatory, but it makes it easier to control the behaviour. -->
-	<security:http use-expressions="true" create-session="never" entry-point-ref="oauth2AuthenticationEntryPoint"
-		access-decision-manager-ref="accessDecisionManager">
-		<security:anonymous enabled="false" />
-		<security:intercept-url pattern="/user*" access="hasAnyRole('ROLE_ADMIN', 'ROLE_USER')" />
-		<security:custom-filter ref="resourceServerFilter" before="PRE_AUTH_FILTER" />
-		<security:access-denied-handler ref="accessDeniedHandler" />
-	</security:http>
-
 	<bean id="oauth2AuthenticationEntryPoint" class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
 		<property name="realmName" value="restapp" />
 	</bean>
+
 	<bean id="clientAuthenticationEntryPoint" class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
 		<property name="realmName" value="restapp/client" />
 		<property name="typeName" value="Basic" />
 	</bean>
-	<bean id="accessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">
-		<constructor-arg>
-			<list>
-				<bean class="org.springframework.security.oauth2.provider.vote.ScopeVoter"></bean>
-				<bean class="org.springframework.security.access.vote.RoleVoter"></bean>
-				<bean class="org.springframework.security.access.vote.AuthenticatedVoter"></bean>
-				<bean class="org.springframework.security.web.access.expression.WebExpressionVoter">
-					<property name="expressionHandler" ref="oauthWebExpressionHandler" />
-				</bean>
-			</list>
-		</constructor-arg>
-	</bean>
-
-	<oauth2:web-expression-handler id="oauthWebExpressionHandler" />
-
-	<bean id="accessDeniedHandler" class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler"></bean>
 
 	<bean id="clientCredentialsTokenEndpointFilter"
 		class="org.springframework.security.oauth2.provider.client.ClientCredentialsTokenEndpointFilter">
@@ -66,22 +40,6 @@
 	<bean id="clientDetailsUserSerivce" class="org.springframework.security.oauth2.provider.client.ClientDetailsUserDetailsService">
 		<constructor-arg ref="clientDetails" />
 	</bean>
-
-
-
-
-	<bean id="restAuthenticationSuccessHandler" class="com.rkumbhare.myapp.security.RestAuthenticationSuccessHandler">
-	</bean>
-
-	<security:authentication-manager alias="authenticationManager">
-		<security:authentication-provider>
-			<security:user-service>
-				<security:user name="admin" password="password" authorities="ROLE_ADMIN" />
-				<security:user name="user" password="password" authorities="ROLE_USER" />
-			</security:user-service>
-		</security:authentication-provider>
-	</security:authentication-manager>
-
 
 	<bean id="tokenStore" class="org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore"></bean>
 	<bean id="tokenServices" class="org.springframework.security.oauth2.provider.token.DefaultTokenServices">
@@ -104,7 +62,6 @@
 		</property>
 	</bean>
 
-
 	<!-- OAuth2 Authorization Server -->
 	<oauth2:authorization-server client-details-service-ref="clientDetails"
 		token-services-ref="tokenServices" user-approval-handler-ref="userApprovalHandler">
@@ -116,7 +73,7 @@
 	</oauth2:authorization-server>
 
 	<!-- OAuth2 Protected Resources Server -->
-	<oauth2:resource-server id="resourceServerFilter" resource-id="conference"
+	<oauth2:resource-server id="resourceServerFilter" resource-id="restapp"
 		token-services-ref="tokenServices" />
 
 
@@ -124,24 +81,62 @@
 	<oauth2:client-details-service id="clientDetails">
 		<!-- Web Application clients -->
 		<oauth2:client client-id="client1" 
-						authorized-grant-types="password,authorization_code,refresh_token,implicit" 
-						authorities="ROLE_CLIENT, ROLE_TRUSTED_CLIEN"
-						access-token-validity="60"
-						resource-ids="restapp"
-						scope="read,write,trust" />
+					authorized-grant-types="password,authorization_code,refresh_token,implicit"
+					authorities="ROLE_CLIENT, ROLE_TRUSTED_CLIEN" 
+					access-token-validity="60" 
+					resource-ids="restapp"
+					scope="read,write,trust" />
 		<oauth2:client client-id="client2" 
-						authorized-grant-types="refresh_token" 
-						authorities="ROLE_CLIENT, ROLE_TRUSTED_CLIEN"
-						access-token-validity="60"
-						resource-ids="restapp"
-						scope="read,write,trust" />
+					authorized-grant-types="password"
+					authorities="ROLE_CLIENT, ROLE_TRUSTED_CLIEN" 
+					access-token-validity="60" 
+					resource-ids="restapp"
+					scope="read,write,trust" />
 	</oauth2:client-details-service>
+
+
+
+	<!-- The OAuth2 protected resources are separated out into their own block so we can deal with authorization 
+		and error handling separately. This isn't mandatory, but it makes it easier to control the behaviour. -->
+	<security:http use-expressions="true" create-session="never"
+		access-decision-manager-ref="accessDecisionManager">
+		<security:anonymous enabled="false" />
+		<security:intercept-url pattern="/user*" access="hasAnyRole('ROLE_ADMIN')" />
+		<security:http-basic entry-point-ref="oauth2AuthenticationEntryPoint" />
+		<security:custom-filter ref="resourceServerFilter" before="PRE_AUTH_FILTER" />
+		<security:access-denied-handler ref="accessDeniedHandler" />
+	</security:http>
+
+	<bean id="accessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">
+		<constructor-arg>
+			<list>
+				<bean class="org.springframework.security.oauth2.provider.vote.ScopeVoter"></bean>
+				<bean class="org.springframework.security.access.vote.RoleVoter"></bean>
+				<bean class="org.springframework.security.access.vote.AuthenticatedVoter"></bean>
+				<bean class="org.springframework.security.web.access.expression.WebExpressionVoter">
+					<property name="expressionHandler" ref="oauthWebExpressionHandler" />
+				</bean>
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<oauth2:web-expression-handler id="oauthWebExpressionHandler" />
+	<oauth2:expression-handler id="oauthExpressionHandler" />
+
+	<bean id="accessDeniedHandler" class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler"></bean>
+
+	<security:authentication-manager alias="authenticationManager">
+		<security:authentication-provider>
+			<security:user-service>
+				<security:user name="admin" password="password" authorities="ROLE_ADMIN" />
+				<security:user name="user" password="password" authorities="ROLE_USER" />
+			</security:user-service>
+		</security:authentication-provider>
+	</security:authentication-manager>
 
 	<security:global-method-security pre-post-annotations="enabled"
 		proxy-target-class="true">
 		<security:expression-handler ref="oauthExpressionHandler" />
 	</security:global-method-security>
-
-	<oauth2:expression-handler id="oauthExpressionHandler" />
 
 </beans>

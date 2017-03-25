@@ -37,3 +37,10 @@ If the access_token is not expired and is a valid token, the requested resources
 3) In case the access_token is expired, user needs to get a new access_token using its refreshing token that was accepted in step(1). A new access token request after expiration looks something like this:
 http://localhost:8080/spring-security-oauth2/oauth/token?grant_type=refresh_token&client_id=client&refresh_token=7ac7940a-d29d-4a4c-9a47-25a2167c8c49 
 And you will get a new access_token. 
+
+
+
+# Http Status
+
+401 -> Unauthorized user 
+403 -> Access Denied

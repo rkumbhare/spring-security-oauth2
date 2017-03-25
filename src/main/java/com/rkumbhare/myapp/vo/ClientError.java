@@ -9,12 +9,12 @@ import org.springframework.http.HttpStatus;
 
 public class ClientError {
 	private HttpStatus status;
-	private String message;
 	private String error;
+	private String description;
 
-	public ClientError(HttpStatus status, String message, String error) {
+	public ClientError(HttpStatus status, String error, String description) {
 		this.status = status;
-		this.message = message;
+		this.description = description;
 		this.error = error;
 	}
 	public HttpStatus getStatus() {
@@ -23,11 +23,12 @@ public class ClientError {
 	public void setStatus(HttpStatus status) {
 		this.status = status;
 	}
-	public String getMessage() {
-		return message;
+
+	public String getDescription() {
+		return description;
 	}
-	public void setMessage(String message) {
-		this.message = message;
+	public void setDescription(String description) {
+		this.description = description;
 	}
 	public String getError() {
 		return error;
